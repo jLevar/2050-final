@@ -1,0 +1,100 @@
+---
+title: "Sleep EDA - Final Project"
+author: "Joshua LeVar"
+date: "`r Sys.Date()`"
+output: html_document
+---
+# A Statistical Analysis of Sleep Health Data
+## Background
+
+The purpose of this study is to use real-world data of sleep and health to determine how different sleep and health factors relate. I believe this to be interesting as it might reveal something interesting about the nature of the world. 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+data = read.csv('./SleepStudy.csv', header=TRUE)
+str(data)
+```
+
+## Research Questions:
+
+In this project I will look to answer the following questions:
+
+- Does gender affect sleep quantity?
+- Does gender affect stress?
+- Does alcohol use affect depression status?
+- Does sleep quality affect cognition scores?**
+
+## Methodology
+
+### Data Description
+**From the Textbook** 
+
+> The data were obtained from a sample of students who did skills tests to measure cognitive function, completed a survey that asked many questions about attitudes and habits, and kept a sleep diary to record time and quality of sleep over a two-week period.
+
+```{r}
+dim(data)
+```
+There are 253 observations of 27 variables
+
+**Variables of Interest**
+
+- Gender (categorical): 1 = male, 0 = female
+- AverageSleep (numeric): Average hours of sleep for all days
+- Stress (categorical): Coded stress score: normal or high
+- AlcoholUse (categorical): Self-reported: Abstain, Light, Moderate, or Heavy
+- DepressionStatus (categorical): Coded depression score: normal, moderate, or severe
+- PoorSleepQuality (numeric): Measure of sleep quality (higher values are poorer sleep)
+- CognitionZscore (numeric): Z-score on a test of cognitive skills
+
+### Data Analysis
+
+To answer: *Does gender affect sleep quantity?*, I will use  a t-test to analyse the difference in means of sleep quantity by gender.
+
+To answer: *Does gender affect stress?*, I will use a z-test to analyse the difference in proportions of stress status form males and females.
+
+To answer: *Does alcohol use affect depression status?*, I will use a chi-square analysis by looking at the difference in proportions of depression status for all levels of alcohol use.
+
+To answer: *Does sleep quality affect cognition scores?*, I will be using regression to analyse how a unit change in sleep quality causes a unit change in cognition scores**
+
+### Hypotheses
+
+#### t-test
+- Null: The difference in the means is 0
+- Alternative: The difference in the means is not 0
+
+#### z-test
+- Null: The difference in the proportions is 0
+- Alternative: The difference in the proportions is not 0
+
+#### chi-square
+- Null: All proportions are equal
+- Alternative: At least one proportion is not equal to the rest
+ 
+#### regression
+- Null: All regression coefficients are equal to 0
+- Alternative: At least one coefficient is not 0
+
+## Results
+```{r}
+table(data$Gender)
+boxplot(data$AverageSleep ~ data$Gender)
+```
+```{r}
+female = data[data$Gender == 0,]
+male = data[data$Gender == 1,]
+c(summary(female$AverageSleep), setNames(sd(female$AverageSleep), "SD"))
+```
+
+```{r}
+c(summary(male$AverageSleep), setNames(sd(male$AverageSleep), "SD"))
+```
+```{r}
+t.test(data$AverageSleep ~ data$Gender, alternative="two.sided", conf.level=0.95)
+```
+## Discussion
+
+
+
