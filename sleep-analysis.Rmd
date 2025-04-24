@@ -7,7 +7,7 @@ output: html_document
 # A Statistical Analysis of Sleep Health Data
 ## Background
 
-The purpose of this study is to use real-world data of sleep and health to determine how different sleep and health factors relate. I believe this to be interesting as it might reveal something interesting about the nature of the world. 
+The purpose of this study is to use real-world data of sleep and health to determine how different sleep and health factors relate. I believe this to be interesting as it might reveal something interesting about how our decisions about sleep and life affect each other.
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -25,7 +25,7 @@ In this project I will look to answer the following questions:
 - Does gender affect sleep quantity?
 - Does gender affect stress?
 - Does alcohol use affect depression status?
-- Does sleep quality affect cognition scores?**
+- How do cognition scores depend on sleep quality, sleep quantity, and happiness?
 
 ## Methodology
 
@@ -48,6 +48,7 @@ There are 253 observations of 27 variables
 - DepressionStatus (categorical): Coded depression score: normal, moderate, or severe
 - PoorSleepQuality (numeric): Measure of sleep quality (higher values are poorer sleep)
 - CognitionZscore (numeric): Z-score on a test of cognitive skills
+- Happiness (numeric): Measure of degree of happiness
 
 ### Data Analysis
 
@@ -57,44 +58,125 @@ To answer: *Does gender affect stress?*, I will use a z-test to analyse the diff
 
 To answer: *Does alcohol use affect depression status?*, I will use a chi-square analysis by looking at the difference in proportions of depression status for all levels of alcohol use.
 
-To answer: *Does sleep quality affect cognition scores?*, I will be using regression to analyse how a unit change in sleep quality causes a unit change in cognition scores**
+To answer: *How do cognition scores depend on sleep quality, sleep quantity, and happiness?*, I will be using multiple regression to analyse what variables, if any, have a statistically significant affect on cognition scores
 
 ### Hypotheses
 
-#### t-test
+#### T-Test
 - Null: The difference in the means is 0
 - Alternative: The difference in the means is not 0
 
-#### z-test
+#### Z-Test
 - Null: The difference in the proportions is 0
 - Alternative: The difference in the proportions is not 0
 
-#### chi-square
+#### Chi-Squared
 - Null: All proportions are equal
 - Alternative: At least one proportion is not equal to the rest
  
-#### regression
+#### Multiple Regression
 - Null: All regression coefficients are equal to 0
 - Alternative: At least one coefficient is not 0
 
 ## Results
+### Does gender affect sleep quantity?
 ```{r}
-table(data$Gender)
 boxplot(data$AverageSleep ~ data$Gender)
 ```
 ```{r}
 female = data[data$Gender == 0,]
 male = data[data$Gender == 1,]
 c(summary(female$AverageSleep), setNames(sd(female$AverageSleep), "SD"))
-```
-
-```{r}
 c(summary(male$AverageSleep), setNames(sd(male$AverageSleep), "SD"))
-```
-```{r}
 t.test(data$AverageSleep ~ data$Gender, alternative="two.sided", conf.level=0.95)
 ```
-## Discussion
 
+#### Conclusion
+The t-test results show no statistically significant difference between the
+average sleep times between Male and Female (p-value 0.5585 > 0.05)
+
+### Does gender affect stress?
+```{r}
+table(data$Gender, data$Stress)
+```
+```{r}
+proportions = setNames(c(mean(female$Stress == "high"), mean(male$Stress == "high")), c("Female", "Male"))
+counts = setNames(c(sum(female$Stress == "high"), sum(male$Stress == "high")), c("Female", "Male"))
+proportions
+```
+
+```{r}
+barplot(height = proportions,
+        ylim = c(0, 1), col = "skyblue",
+        ylab = "Proportion", main = "Proportion of High Stress by Gender")
+```
+
+```{r}
+prop.test(x=counts, n=c(nrow(female), nrow(male)), alternative="two.sided", conf.level=0.95)
+```
+#### Conclusion
+The z-test results show no statistically significant difference between the
+proportion of high stress individuals between Male and Female (p-value 0.2081 > 0.05)
+
+### Does alcohol use affect depression status?
+```{r}
+alcoholDepressionTable = table(data$AlcoholUse, data$DepressionStatus)
+alcoholDepressionTable
+```
+```{r}
+df = as.data.frame(as.table(alcoholDepressionTable))
+colnames(df) = c("AlcoholUse", "DepressionStatus", "Count")
+df$AlcoholUse = factor(df$AlcoholUse, levels = c("Abstain", "Light", "Moderate", "Heavy"))
+df$DepressionStatus = factor(df$DepressionStatus, levels = c("severe", "moderate", "normal"))
+
+ggplot(df, aes(x = AlcoholUse, y = Count, fill = DepressionStatus)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(y = "Proportion", title = "Proportion of Depression Status by Alcohol Use") +
+  scale_fill_manual(values = c(
+  "normal" = "#a6d9e7",
+  "moderate" = "#f9c74f",
+  "severe" = "#f94144")) +
+  theme_minimal()
+``` 
+```{r}
+chisq.test(alcoholDepressionTable)
+```
+#### Conclusion
+The Chi-squared test results show no statistically significant difference between the
+proportions of depression status between different categories of alcohol use 
+(p-value 0.5629 > 0.05)
+
+### How do cognition scores depend on sleep quality, sleep quantity, and happiness?
+
+```{r}
+model <- lm(CognitionZscore ~ PoorSleepQuality + AverageSleep + Happiness, data = data)
+
+summary(model)
+anova(model)
+par(mfrow = c(2, 2)) 
+plot(model)
+```
+
+#### Conclusion
+The multiple regression model shows no statistically significant effect of sleep quality,
+sleep quantity, or happiness on cognition scores
+(all p-values > 0.05)
+
+## Discussion
+### Meaning
+I was quite surprised to see that none of my tests gave any statistically significant result.
+I was hoping to see at least some evidence of a factor that affects or is affected my sleep. 
+In short, we were not able to show any:
+
+- Effect of gender on sleep quantity
+- Effect of gender on stress
+- Effect of alcohol on depression status
+- Effect of sleep quality, sleep quantity, or happiness on cognition scores
+
+### Limitations
+I believe that sample size was not an issue here. Since none of our results are conclusive,
+I don't see much reason to be concerned about bias or confounders. It's not obvious to me
+that such confounders exist that would hide the statistical assocations that we are looking at
+in this analysis.
 
 
